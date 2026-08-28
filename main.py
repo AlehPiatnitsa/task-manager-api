@@ -1,8 +1,16 @@
-from fastapi import FastAPI, HTTPException, Depends
+import os
+from fastapi import FastAPI, HTTPException, Depends,  Header
 from sqlalchemy.orm import Session
 from database import SessionLocal, TaskDB, engine, Base
 from pydantic import BaseModel, Field
 from typing import Optional
+
+API_KEY = os.getenv("API_KEY")
+
+def verify_api_key(x_api_key: str = Header(...)):
+    if x_api_key != API_KEY:
+        raise HTTPException(status_code=403, detail="Invalid or missing API key")
+
 
 Base.metadata.create_all(bind=engine)
 
@@ -44,6 +52,7 @@ def get_db():
 @app.post(
     "/tasks", 
     status_code=201, 
+    dependencies=[Depends(verify_api_key)],
     summary="Создать задачу",
     response_model=list[TaskResponse],
     tags=["Tasks"]
