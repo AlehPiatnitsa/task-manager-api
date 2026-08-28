@@ -20,3 +20,4 @@ class TaskDB(Base):
     completed = Column(Boolean, default=False)
 
 Base.metadata.create_all(bind=engine)
+

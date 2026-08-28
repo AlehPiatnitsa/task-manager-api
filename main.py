@@ -19,8 +19,12 @@ class Task(BaseModel):
 #tasks = []  # хранилище в памяти — обычный список словарей
 
 class TaskCreate(BaseModel):
-    title: str
+    title: str = Field(..., min_length=1, max_length=200)
     completed: bool = False
+
+class TaskUpdate(BaseModel):
+    title: Optional[str] = Field(default=None, min_length=1, max_length=200)
+    completed: Optional[bool] = None
 
 class TaskResponse(BaseModel):
     id: int
@@ -58,10 +62,6 @@ def create_task(task: TaskCreate, db: Session = Depends(get_db)):
 )
 def get_tasks(db: Session = Depends(get_db)):
     return db.query(TaskDB).all()
-
-class TaskUpdate(BaseModel):
-    title: Optional[str] = None
-    completed: Optional[bool] = None
 
 @app.patch(
     "/tasks/{task_id}", 
