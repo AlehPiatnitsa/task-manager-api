@@ -52,17 +52,18 @@ def get_db():
 @app.post(
     "/tasks", 
     status_code=201, 
-    dependencies=[Depends(verify_api_key)],
     summary="Создать задачу",
     response_model=list[TaskResponse],
-    tags=["Tasks"]
+    tags=["Tasks"],
+    dependencies=[Depends(verify_api_key)]
     )
+    
 def create_task(task: TaskCreate, db: Session = Depends(get_db)):
     new_task = TaskDB(title=task.title, completed=task.completed)
     db.add(new_task)
     db.commit()
     db.refresh(new_task)
-    return new_task
+    return [new_task]
 
 @app.get(
     "/tasks",
