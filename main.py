@@ -1,5 +1,8 @@
 import os
-from fastapi import FastAPI, HTTPException, Depends,  Header
+from slowapi import Limiter, _rate_limit_exceeded_handler
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
+from fastapi import FastAPI, HTTPException, Depends,  Header, Request
 from sqlalchemy.orm import Session
 from database import SessionLocal, TaskDB, engine, Base
 from pydantic import BaseModel, Field
@@ -19,6 +22,10 @@ app = FastAPI(
     description="Учебный API для управления задачами. Поддерживает полный CRUD с хранением в PostgreSQL.",
     version="1.0.0"
 )
+
+limiter = Limiter(key_func=get_remote_address)
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 class Task(BaseModel):
     title: str
@@ -57,8 +64,9 @@ def get_db():
     tags=["Tasks"],
     dependencies=[Depends(verify_api_key)]
     )
+@limiter.limit("5/minute")
     
-def create_task(task: TaskCreate, db: Session = Depends(get_db)):
+def create_task(request: Request, task: TaskCreate, db: Session = Depends(get_db)):
     new_task = TaskDB(title=task.title, completed=task.completed)
     db.add(new_task)
     db.commit()
