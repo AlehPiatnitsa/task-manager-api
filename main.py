@@ -53,7 +53,7 @@ def get_db():
     "/tasks", 
     status_code=201, 
     summary="Создать задачу",
-    response_model=list[TaskResponse],
+    response_model=TaskResponse,
     tags=["Tasks"],
     dependencies=[Depends(verify_api_key)]
     )
@@ -63,7 +63,7 @@ def create_task(task: TaskCreate, db: Session = Depends(get_db)):
     db.add(new_task)
     db.commit()
     db.refresh(new_task)
-    return [new_task]
+    return new_task
 
 @app.get(
     "/tasks",
